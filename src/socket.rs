@@ -177,6 +177,7 @@ where
                     Some(event) = socket_event_rx.recv() => {
                         match event {
                             SocketEvent::Outgoing((packet, dst)) => {
+                                tracing::error!("sending packet {:?}", packet);
                                 let encoded = packet.encode();
                                 if let Err(err) = socket.send_to(&encoded, &dst).await {
                                     tracing::debug!(

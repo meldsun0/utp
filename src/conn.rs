@@ -297,7 +297,7 @@ impl<const N: usize, P: ConnectionPeer> Connection<N, P> {
                             // Reset the idle timeout on any incoming packet.
                             let idle_deadline = tokio::time::Instant::now() + self.config.max_idle_timeout;
                             idle_timeout.as_mut().reset(idle_deadline);
-
+                            tracing::error!("got packet {:?}", packet);
                             self.on_packet(&packet, Instant::now());
                         }
                         StreamEvent::Shutdown => {
