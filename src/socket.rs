@@ -91,7 +91,8 @@ where
                                 pkt
                             },
                             Err(..) => {
-                                tracing::warn!(?src, "unable to decode uTP packet");
+                                tracing::error!("Attempting to decode packet from bytes: {:?}", &buf[..n]);
+                                tracing::warn!(?src, "unable to decode uTP packet --");
                                 continue;
                             }
                         };
