@@ -86,13 +86,9 @@ where
                     biased;
                     Ok((n, src)) = socket.recv_from(&mut buf) => {
                         let packet = match Packet::decode(&buf[..n]) {
-                            Ok(pkt) => {
-                                tracing::error!("got packet {:?}", pkt);
-                                pkt
-                            },
-                            Err(..) => {
-                                tracing::error!("Attempting to decode packet from bytes: {:?}", &buf[..n]);
-                                tracing::warn!(?src, "unable to decode uTP packet --");
+                            Ok(pkt) => pkt,
+                            Err(err) => {
+                                tracing::warn!(?src, "unable to decode uTP packet {err:?}");
                                 continue;
                             }
                         };
