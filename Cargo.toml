@@ -19,6 +19,7 @@ futures = "0.3.26"
 rand = "0.8.5"
 tokio = { version = "1.25.0", features = ["io-util", "rt-multi-thread", "macros", "net", "sync", "time"] }
 tracing = { version = "0.1.37", features = ["std", "attributes", "log"] }
+hex = "0.4.3"
 
 [dev-dependencies]
 quickcheck = "1.0.3"

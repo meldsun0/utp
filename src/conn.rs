@@ -1179,13 +1179,12 @@ impl<const N: usize, P: ConnectionPeer> Connection<N, P> {
             )
         };
         tracing::trace!(
-            "Write data cid={} packetType={} pkSeqNr={} pkAckNr={} length={} data={}",
+            "Write data cid={} packetType={} pkSeqNr={} pkAckNr={} length={}",
             packet.conn_id(),
             packet.packet_type(),
             packet.seq_num(),
             packet.ack_num(),
-            packet.encoded_len(),
-            packet.encode()
+            packet.encoded_len()
         );
 
         sent_packets.on_transmit(packet.seq_num(), packet.packet_type(), payload, len, now);
