@@ -571,10 +571,6 @@ impl Packet {
 
 impl Debug for Packet {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        let payload_str = match &self.payload {
-            Some(payload) => hex::encode(payload),
-            None => String::from("None"),
-        };
         write!(f, "packet cid={} packetType={} seqNr={} ackNr={} timestamp={} timestampDiff={} remoteWindow={} data={}",
                self.conn_id(),
                self.packet_type(),
@@ -583,7 +579,7 @@ impl Debug for Packet {
                self.ts_micros(),
                self.ts_diff_micros(),
                self.window_size(),
-               payload_str,
+               hex::encode(&self.payload)
         )
     }
 }
