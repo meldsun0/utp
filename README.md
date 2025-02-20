@@ -6,7 +6,6 @@ This library is based on [uTP][utp] and it was originally forked from [Tribler/u
 
 
 ## Current Flaws
-* Correct handling of RST packets 
 * Closing connection while sending/reading is not yet handled good enough
 * High CPU consumption
 * Probably some minor bugs.

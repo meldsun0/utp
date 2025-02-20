@@ -67,9 +67,7 @@ public class UTPWritingFuture {
   }
 
   public void graceFullInterrupt() {
-    if (this.isAlive()) {
       graceFullInterrupt = true;
-    }
   }
 
   private void initializeAlgorithm() {
@@ -127,7 +125,7 @@ public class UTPWritingFuture {
 
   private UtpPacket buildNextPacket(UtpPacket utpPacket) {
     int packetSize = Math.min(algorithm.sizeOfNextPacket(), buffer.remaining());
-    packetSize = Math.min(packetSize, 800);
+    packetSize = Math.min(packetSize, 800); //TODO refactor this!
     byte[] payload = new byte[packetSize];
     buffer.get(payload);
     utpPacket.setPayload(payload);
