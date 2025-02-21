@@ -3,6 +3,7 @@ package examples;
 import meldsun0.utp.UTPClient;
 import meldsun0.utp.network.udp.UDPAddress;
 import meldsun0.utp.network.udp.UDPTransportLayer;
+import org.apache.tuweni.bytes.Bytes;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -26,13 +27,13 @@ public class Offer {
         .get();
   }
 
-  private static ByteBuffer getContentToSend(String inputString) {
+  private static Bytes getContentToSend(String inputString) {
     byte[] byteArray = inputString.getBytes(StandardCharsets.UTF_8);
     ByteBuffer buffer = ByteBuffer.allocate(byteArray.length);
     buffer.put(byteArray);
     buffer.flip();
     System.out.println("Content to send:" + StandardCharsets.UTF_8.decode(buffer));
-    return buffer;
+    return Bytes.of(buffer.array());
   }
 
   public static void startListeningIncomingPackets(

@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 import java.util.Optional;
+import java.util.Random;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -213,9 +214,11 @@ public class UTPClient {
     LOG.debug("Sending RST packet MUST BE IMPLEMENTED");
   }
 
-  public CompletableFuture<Void> write(ByteBuffer buffer) {
+  public CompletableFuture<Void> write(Bytes bytes) {
     return this.connection.thenCompose(
         v -> {
+          ByteBuffer buffer = ByteBuffer.allocate(bytes.size());
+          buffer.put(bytes.toArray());
           this.writer = Optional.of(new UTPWritingFuture(this, buffer, timeStamper));
           return writer.get().startWriting();
         });
@@ -365,5 +368,9 @@ public class UTPClient {
     } catch (Exception e) {
       LOG.debug("Error when sending Fin Packet");
     }
+  }
+  public static int generateRandomConnectionId() {
+        Random random = new Random();
+        return random.nextInt(65535) + 1;
   }
 }

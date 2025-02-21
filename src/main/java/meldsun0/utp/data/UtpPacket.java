@@ -476,4 +476,8 @@ public class UtpPacket {
       return this;
     }
   }
+
+  public Bytes toBytes() {
+       return Bytes.of(this.toByteArray());
+  }
 }
