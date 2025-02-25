@@ -179,8 +179,8 @@ public class UTPClient {
   private void handleConfirmationOfConnection(UtpPacket utpPacket) {
     if ((utpPacket.getConnectionId() & connectionIdMASK)
         == this.session.getConnectionIdReceiving()) {
-      this.session.connectionConfirmed(utpPacket.getSequenceNumber());
-      //  this.session.connectionConfirmed(utpPacket.getSequenceNumber() - 1);
+      //this.session.connectionConfirmed(utpPacket.getSequenceNumber());
+       this.session.connectionConfirmed(utpPacket.getSequenceNumber() - 1);
       disableConnectionTimeOutCounter();
       connection.complete(null);
       this.session.printState();
