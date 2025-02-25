@@ -6,7 +6,7 @@ plugins {
     id 'java-library'
     id 'maven-publish'
 }
-group = 'meldsun0'
+group = 'meldsun0.utp4j'
 version = '1.0-SNAPSHOT'
 description = 'Micro Transport Protocol for Java'
 java.sourceCompatibility = JavaVersion.VERSION_21
@@ -15,6 +15,21 @@ repositories {
     mavenLocal()
     maven {
         url = uri('https://repo.maven.apache.org/maven2/')
+    }
+}
+
+
+publishing {
+
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = "https://maven.pkg.github.com/meldsun0/utp4j"
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
     }
 }
 
