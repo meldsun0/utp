@@ -6,7 +6,7 @@ plugins {
     id 'java-library'
     id 'maven-publish'
 }
-group = 'meldsun0.utp4j'
+group = 'org.meldsun.utp'
 version = '1.0-SNAPSHOT'
 description = 'Micro Transport Protocol for Java'
 java.sourceCompatibility = JavaVersion.VERSION_21
@@ -24,11 +24,18 @@ publishing {
     repositories {
         maven {
             name = "GitHubPackages"
-            url = "https://maven.pkg.github.com/meldsun0/utp4j"
+            url = "https://maven.pkg.github.com/meldsun0/utp"
             credentials {
                 username = System.getenv("GITHUB_ACTOR")
                 password = System.getenv("GITHUB_TOKEN")
             }
+        }
+    }
+
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = "utp-core"
+            from components.java
         }
     }
 }
