@@ -14,7 +14,9 @@ import java.nio.ByteBuffer;
 import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class UTPWritingFuture {
 
@@ -26,6 +28,7 @@ public class UTPWritingFuture {
   private final UtpAlgorithm algorithm;
   private final MicroSecondsTimeStamp timeStamper;
   private CompletableFuture<Void> writerFuture;
+  private final AtomicBoolean started = new AtomicBoolean(false);
 
   public UTPWritingFuture(
       UTPClient utpClient, ByteBuffer buffer, MicroSecondsTimeStamp timeStamper) {
@@ -36,7 +39,10 @@ public class UTPWritingFuture {
     this.writerFuture = new CompletableFuture<>();
   }
 
-  public CompletableFuture<Void> startWriting() {
+  public CompletableFuture<Void> startWriting(ExecutorService executor) {
+    if (!started.compareAndSet(false, true)) {
+      throw new IllegalStateException("UTPWritingFuture has already been called.");
+    }
     CompletableFuture.runAsync(
         () -> {
           boolean successfull = false;
@@ -62,7 +68,7 @@ public class UTPWritingFuture {
           } finally {
             finalizeTransmission(successfull);
           }
-        });
+        }, executor);
     return writerFuture;
   }
 

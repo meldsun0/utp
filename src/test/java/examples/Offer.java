@@ -10,6 +10,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 
 public class Offer {
 
@@ -23,7 +24,7 @@ public class Offer {
 
     chanel
         .connect(333, udpaddress)
-        .thenCompose(v -> chanel.write(getContentToSend("Content34")))
+        .thenCompose(v -> chanel.write(getContentToSend("Content34"), Executors.newSingleThreadExecutor()))
         .get();
   }
 

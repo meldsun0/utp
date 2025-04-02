@@ -16,7 +16,9 @@ import java.io.IOException;
 import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static meldsun0.utp.data.UtpPacketUtils.NO_EXTENSION;
 import static meldsun0.utp.data.UtpPacketUtils.SELECTIVE_ACK;
@@ -24,6 +26,7 @@ import static meldsun0.utp.data.UtpPacketUtils.SELECTIVE_ACK;
 public class UTPReadingFuture {
 
   private static final int PACKET_DIFF_WARP = 50000;
+  public static final int TIMEOUT = 40000000;
   private int lastPayloadLength = UtpAlgConfiguration.MAX_PACKET_SIZE;
   private final ByteArrayOutputStream buffer;
 
@@ -44,6 +47,8 @@ public class UTPReadingFuture {
   private final UTPClient UTPClient;
   private final CompletableFuture<Bytes> readFuture;
 
+  private final AtomicBoolean started = new AtomicBoolean(false);
+
   public UTPReadingFuture(UTPClient UTPClient, MicroSecondsTimeStamp timestamp) {
     this.UTPClient = UTPClient;
     this.buffer = new ByteArrayOutputStream();
@@ -52,11 +57,15 @@ public class UTPReadingFuture {
     this.readFuture = new CompletableFuture<>();
   }
 
-  public CompletableFuture<Bytes> startReading(int startingSequenceNumber) {
+  public CompletableFuture<Bytes> startReading(int startingSequenceNumber,  ExecutorService executorService) {
+    if (!started.compareAndSet(false, true)) {
+      throw new IllegalStateException("UTPReadingFuture has already been called.");
+    }
     CompletableFuture.runAsync(
         () -> {
-          boolean successful = false;
+          String connectionInfo = UTPClient.getConnectionsInfo();
           Bytes firstPacket = Bytes.EMPTY;
+          skippedBuffer.setExpectedSequenceNumber(startingSequenceNumber);
           try {
             while (continueReading()) {
               BlockingQueue<UtpTimestampedPacketDTO> queue = UTPClient.getQueue();
@@ -71,7 +80,7 @@ public class UTPReadingFuture {
                 if (isLastPacket(packetDTO)) {
                   gotLastPacket = true;
                   lastPacketTimestamp = timeStamper.timeStamp();
-                  LOG.info("Received the last packet.");
+                    LOG.info("{} Received the last packet.", connectionInfo);
                 }
                 // TODO FIX THIS!!!!
                 if ((startingSequenceNumber & 0xFFFF)
@@ -94,36 +103,49 @@ public class UTPReadingFuture {
               if (isTimedOut()) {
                 if (!hasSkippedPackets()) {
                   gotLastPacket = true;
-                  LOG.info("Ending reading, no more incoming data");
+                  LOG.info("{} Ending reading, no more incoming data", connectionInfo);
                 } else {
-                  throw new IOException("Timeout occurred with skipped packets.");
+                  throw new IOException("Timeout occurred with skipped packets on "+ connectionInfo);
                 }
               }
-              successful = true;
             }
           } catch (IOException | InterruptedException | ArrayIndexOutOfBoundsException e) {
-            LOG.debug("Something went wrong during packet processing!");
+              LOG.info("Something went wrong during packet processing! on {}", connectionInfo);
           } finally {
-            if (successful) {
-              readFuture.complete(
-                  Bytes.concatenate(firstPacket, Bytes.of(this.buffer.toByteArray())));
-            } else {
-              readFuture.completeExceptionally(new RuntimeException("Something went wrong!"));
+            try{
+              if (!skippedBuffer.isEmpty()) {
+                LOG.info("Flushing skipped packets on {}", connectionInfo);
+//                Queue<UtpTimestampedPacketDTO> remaining = skippedBuffer.getAllUntilNextMissing2();
+//                for (UtpTimestampedPacketDTO dto : remaining) {
+//                  buffer.write(dto.utpPacket().getPayload());
+//                  totalPayloadLength += dto.utpPacket().getPayload().length;
+//                }
+              }
+              boolean successful = totalPayloadLength > 0 || gotLastPacket;
+              if (successful) {
+                readFuture.complete(Bytes.concatenate(firstPacket, Bytes.of(this.buffer.toByteArray())));
+              } else {
+                LOG.error("Read failed on {}: totalPayloadLength={}, gotLastPacket={}", connectionInfo, totalPayloadLength, gotLastPacket);
+                readFuture.completeExceptionally(new RuntimeException("Something went wrong!"));
+              }
+              LOG.info("Finished reading on {}. Total payload: {}", connectionInfo, totalPayloadLength);
+              UTPClient.stop();
+            }catch (Exception ex) {
+              LOG.error("UTPReading failed {} on "+ connectionInfo, ex.getMessage());
+              readFuture.completeExceptionally(ex);
             }
-            LOG.info("Total payload length: {}", totalPayloadLength);
-            UTPClient.stop();
           }
-        });
+        }, executorService);
     return this.readFuture;
   }
 
   private boolean isTimedOut() {
     // TODO: extract constants...
     /* time out after 4sec, when eof not reached */
-    boolean timedOut = nowtimeStamp - lastPackedRecieved >= 4000000;
+    boolean timedOut = nowtimeStamp - lastPackedRecieved >= TIMEOUT;
     /* but if remote socket has not recieved synack yet, he will try to reconnect
      * await that aswell */
-    boolean connectionReattemptAwaited = nowtimeStamp - startReadingTimeStamp >= 4000000;
+    boolean connectionReattemptAwaited = nowtimeStamp - startReadingTimeStamp >= TIMEOUT;
     return timedOut && connectionReattemptAwaited;
   }
 
@@ -263,8 +285,16 @@ public class UTPReadingFuture {
   }
 
   private boolean continueReading() {
-    return !graceFullInterrupt
-        && (!gotLastPacket || hasSkippedPackets() || !timeAwaitedAfterLastPacket());
+    boolean shouldContinue = !graceFullInterrupt &&
+            (!gotLastPacket ||           // Haven't finished reading
+                    hasSkippedPackets() ||      // Still waiting for missing packets
+                    !timeAwaitedAfterLastPacket() // Still within wait window
+            );
+    if (!shouldContinue) {
+      LOG.info("Exiting read loop: graceFullInterrupt={}, gotLastPacket={}, hasSkippedPackets={}, timeAwaited={}",
+              graceFullInterrupt, gotLastPacket, hasSkippedPackets(), timeAwaitedAfterLastPacket());
+    }
+    return shouldContinue;
   }
 
   private boolean hasSkippedPackets() {
