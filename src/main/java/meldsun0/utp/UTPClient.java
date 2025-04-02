@@ -281,7 +281,7 @@ public class UTPClient {
   public UtpPacket buildACKPacket(UtpPacket utpPacket, int timestampDifference, long windowSize)
       throws IOException {
     if (utpPacket.getTypeVersion() != FIN) {
-      this.session.updateAckNumber(utpPacket.getSequenceNumber());
+      this.session.setAckNumber(utpPacket.getSequenceNumber());
     }
     // TODO validate that the seq number is sent!
     return buildACKMessage(
