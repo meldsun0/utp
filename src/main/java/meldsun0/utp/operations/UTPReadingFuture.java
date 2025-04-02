@@ -28,7 +28,7 @@ public class UTPReadingFuture {
   private final ByteArrayOutputStream buffer;
 
   private final SkippedPacketBuffer skippedBuffer = new SkippedPacketBuffer();
-  private static volatile boolean graceFullInterrupt;
+  private volatile boolean graceFullInterrupt;
   private MicroSecondsTimeStamp timeStamper;
   private long totalPayloadLength = 0;
   private long lastPacketTimestamp;
