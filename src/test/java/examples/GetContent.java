@@ -6,6 +6,7 @@ import meldsun0.utp.network.udp.UDPTransportLayer;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 
 public class GetContent {
 
@@ -19,7 +20,7 @@ public class GetContent {
 
     chanel
         .connect(333, udpaddress)
-        .thenCompose(v -> chanel.read())
+        .thenCompose(v -> chanel.read(Executors.newSingleThreadExecutor()))
         .thenApply(
             (data) -> {
               System.out.println(data);

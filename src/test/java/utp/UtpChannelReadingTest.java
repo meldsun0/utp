@@ -34,6 +34,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 
 import static meldsun0.utp.data.bytes.UnsignedTypesUtil.longToUbyte;
 import static meldsun0.utp.data.bytes.UnsignedTypesUtil.longToUshort;
@@ -73,7 +74,7 @@ public class UtpChannelReadingTest {
       channel.receivePacket(createPacket(5), remoteAddress); // ack 6, sack 8 -> 00000001
       channel.receivePacket(createPacket(7), remoteAddress); // ack 8
 
-      Bytes bytesRead = channel.read().get();
+      Bytes bytesRead = channel.read(Executors.newSingleThreadExecutor()).get();
 
       // verify 6 ack packets where send and capture them
       verify(udpTransportLayer, times(6))

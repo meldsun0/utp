@@ -105,7 +105,7 @@ public class UTPClient {
   }
 
   public void receivePacket(UtpPacket utpPacket, TransportAddress transportAddress) {
-    LOG.info("[Receiving Packet: " + utpPacket.toString() + "]");
+    LOG.debug("[Receiving Packet: " + utpPacket.toString() + "]");
     switch (utpPacket.getMessageType()) {
       case ST_RESET -> this.forceStop();
       case ST_SYN -> handleIncommingConnectionRequest(utpPacket, transportAddress);
@@ -132,9 +132,8 @@ public class UTPClient {
       UtpPacket utpPacket, TransportAddress transportAddress) {
     if (this.session.getState() == CLOSED
         || (this.session.getState() == CONNECTED
-            && ((utpPacket.getConnectionId() & 0xFFFFFFFF)
-                    == this.session.getConnectionIdReceiving()
-                && transportAddress.equals(this.session.getRemoteAddress())))) {
+            && ((utpPacket.getConnectionId())
+                    == this.session.getConnectionIdSending()))) {
       try {
         this.session.updateStateOnConnectionInitSuccess(utpPacket.getSequenceNumber());
         session.printState();
@@ -214,21 +213,21 @@ public class UTPClient {
     LOG.debug("Sending RST packet MUST BE IMPLEMENTED");
   }
 
-  public CompletableFuture<Void> write(Bytes bytes) {
+  public CompletableFuture<Void> write(Bytes bytes, ExecutorService executor) {
     return this.connection.thenCompose(
         v -> {
           ByteBuffer buffer = ByteBuffer.allocate(bytes.size());
           buffer.put(bytes.toArray());
           this.writer = Optional.of(new UTPWritingFuture(this, buffer, timeStamper));
-          return writer.get().startWriting();
+          return writer.get().startWriting(executor);
         });
   }
 
-  public CompletableFuture<Bytes> read() {
+  public CompletableFuture<Bytes> read(ExecutorService executorService) {
     return this.connection.thenCompose(
         v -> {
           this.reader = Optional.of(new UTPReadingFuture(this, timeStamper));
-          return reader.get().startReading(this.session.getAckNumber()); // TODO FIX THIS
+          return reader.get().startReading(this.session.getAckNumber(), executorService); // TODO FIX THIS
         });
   }
 
@@ -281,7 +280,7 @@ public class UTPClient {
   public UtpPacket buildACKPacket(UtpPacket utpPacket, int timestampDifference, long windowSize)
       throws IOException {
     if (utpPacket.getTypeVersion() != FIN) {
-      this.session.updateAckNumber(utpPacket.getSequenceNumber());
+      this.session.setAckNumber(utpPacket.getSequenceNumber());
     }
     // TODO validate that the seq number is sent!
     return buildACKMessage(
@@ -295,7 +294,7 @@ public class UTPClient {
 
   public void sendPacket(UtpPacket packet) throws IOException {
     if (this.session.getState() != SYN_ACKING_FAILED) {
-      LOG.info("[Sending Packet: " + packet + "]");
+      LOG.debug("[Sending Packet: " + packet + "]");
       this.transportLayer.sendPacket(packet, this.session.getRemoteAddress());
     }
   }
@@ -372,5 +371,9 @@ public class UTPClient {
   public static int generateRandomConnectionId() {
         Random random = new Random();
         return random.nextInt(65535) + 1;
+  }
+
+  public String getConnectionsInfo() {
+      return "[cid sending:" +this.session.getConnectionIdSending()+" cid receiving:"+this.session.getConnectionIdReceiving();
   }
 }

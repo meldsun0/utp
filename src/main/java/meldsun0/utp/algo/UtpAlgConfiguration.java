@@ -6,7 +6,7 @@ public class UtpAlgConfiguration {
   public static final int CONNECTION_ATTEMPT_INTERVALL_MILLIS = 5000;
   public static long MINIMUM_DELTA_TO_MAX_WINDOW_MICROS = 1000000;
   // ack every second packets
-  public static int SKIP_PACKETS_UNTIL_ACK = 2;
+  public static int SKIP_PACKETS_UNTIL_ACK = 0;
 
   /**
    * Auto ack every packet that is smaller than ACK_NR from ack packet. Some Implementations like
@@ -39,10 +39,10 @@ public class UtpAlgConfiguration {
   public static volatile int MAX_BURST_SEND = 5;
 
   /** Minimum number of acks past seqNr=x to trigger a resend of seqNr=x; */
-  public static volatile int MIN_SKIP_PACKET_BEFORE_RESEND = 3;
+  public static volatile int MIN_SKIP_PACKET_BEFORE_RESEND = 2;
 
   public static volatile long MICROSECOND_WAIT_BETWEEN_BURSTS = 28000;
-  public static volatile long TIME_WAIT_AFTER_LAST_PACKET = 3000000;
+  public static volatile long TIME_WAIT_AFTER_LAST_PACKET = 300000;;
   public static volatile boolean ONLY_POSITIVE_GAIN = false;
   public static volatile boolean DEBUG = false;
 
