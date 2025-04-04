@@ -46,25 +46,26 @@ public class UTPWritingFuture {
     CompletableFuture.runAsync(
         () -> {
           boolean successfull = false;
+          String connectionInfo = this.utpClient.getConnectionsInfo();
           try {
             initializeAlgorithm();
             buffer.flip();
             while (continueSending()) {
               if (!processAcknowledgements()) {
-                LOG.debug("Graceful interrupt due to lack of acknowledgements.");
+                LOG.debug("{} Graceful interrupt due to lack of acknowledgements.", connectionInfo);
                 break;
               }
               resendPendingPackets();
 
               if (algorithm.isTimedOut()) {
-                LOG.debug("Timed out. Stopping transmission.");
+                LOG.debug("{} Timed out. Stopping transmission.", connectionInfo);
                 break;
               }
               sendNextPackets();
             }
             successfull = true;
           } catch (IOException exp) {
-            LOG.debug("Something went wrong!");
+            LOG.debug("{} Something went wrong!", connectionInfo);
           } finally {
             finalizeTransmission(successfull);
           }

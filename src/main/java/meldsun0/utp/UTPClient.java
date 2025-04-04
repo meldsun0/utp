@@ -105,7 +105,7 @@ public class UTPClient {
   }
 
   public void receivePacket(UtpPacket utpPacket, TransportAddress transportAddress) {
-    LOG.info("[Receiving Packet: " + utpPacket.toString() + "]");
+    LOG.debug("[Receiving Packet: " + utpPacket.toString() + "]");
     switch (utpPacket.getMessageType()) {
       case ST_RESET -> this.forceStop();
       case ST_SYN -> handleIncommingConnectionRequest(utpPacket, transportAddress);
@@ -294,7 +294,7 @@ public class UTPClient {
 
   public void sendPacket(UtpPacket packet) throws IOException {
     if (this.session.getState() != SYN_ACKING_FAILED) {
-      LOG.info("[Sending Packet: " + packet + "]");
+      LOG.debug("[Sending Packet: " + packet + "]");
       this.transportLayer.sendPacket(packet, this.session.getRemoteAddress());
     }
   }
