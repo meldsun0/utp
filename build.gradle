@@ -7,7 +7,7 @@ plugins {
     id 'maven-publish'
 }
 group = 'org.meldsun.utp'
-version = '1.0-SNAPSHOT'
+version = '2.0-SNAPSHOT'
 description = 'Micro Transport Protocol for Java'
 java.sourceCompatibility = JavaVersion.VERSION_21
 
