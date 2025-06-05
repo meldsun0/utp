@@ -20,8 +20,8 @@ import meldsun0.utp.algo.UtpAlgConfiguration;
 import meldsun0.utp.data.UtpHeaderExtension;
 import meldsun0.utp.data.UtpPacket;
 import meldsun0.utp.data.UtpPacketUtils;
-import meldsun0.utp.network.udp.UDPAddress;
-import meldsun0.utp.network.udp.UDPTransportLayer;
+import meldsun0.utp.network.TransportAddress;
+import meldsun0.utp.network.TransportLayer;
 import org.apache.tuweni.bytes.Bytes;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.commons.util.ReflectionUtils;
@@ -49,8 +49,8 @@ public class UtpChannelReadingTest {
     UtpAlgConfiguration.AUTO_ACK_SMALLER_THAN_ACK_NUMBER = false;
     UtpAlgConfiguration.SKIP_PACKETS_UNTIL_ACK = 1;
 
-    UDPTransportLayer udpTransportLayer = mock(UDPTransportLayer.class);
-    UDPAddress remoteAddress = mock(UDPAddress.class);
+    var udpTransportLayer = mock(TransportLayer.class);
+    var remoteAddress = mock(TransportAddress.class);
 
     UTPClient channel = new UTPClient(udpTransportLayer);
     channel.setState(SessionState.CONNECTED);
@@ -78,7 +78,7 @@ public class UtpChannelReadingTest {
 
       // verify 6 ack packets where send and capture them
       verify(udpTransportLayer, times(6))
-          .sendPacket(ackOne.capture(), ArgumentCaptor.forClass(UDPAddress.class).capture());
+          .sendPacket(ackOne.capture(), ArgumentCaptor.forClass(TransportAddress.class).capture());
       List<UtpPacket> allValues = ackOne.getAllValues();
       Iterator<UtpPacket> iterator = allValues.iterator();
 

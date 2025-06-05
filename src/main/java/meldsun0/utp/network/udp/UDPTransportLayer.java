@@ -17,9 +17,9 @@ public class UDPTransportLayer implements TransportLayer<UDPAddress> {
   protected DatagramSocket socket;
   private final Object sendLock = new Object();
 
-  public UDPTransportLayer() {
+  public UDPTransportLayer(int port) {
     try {
-      this.socket = new DatagramSocket();
+      this.socket = new DatagramSocket(port);
     } catch (SocketException e) {
       throw new RuntimeException(e);
     }
